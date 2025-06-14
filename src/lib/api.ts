@@ -103,6 +103,10 @@ export const productApi = {
     const response = await api.put(`/products/${id}`, data);
     return response.data.data;
   },
+  getNotApprovedProducts: async (): Promise<Product[]> => {
+    const response = await api.get('/products/not-approved');
+    return response.data.data || [];
+  },
 };
 
 // Order API functions

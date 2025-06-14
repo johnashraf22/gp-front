@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Star, ChevronLeft, ChevronRight, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,6 +37,7 @@ const ProductInfo = () => {
   const [error, setError] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -125,13 +126,11 @@ const ProductInfo = () => {
       alert("Please log in to place an order");
       return;
     }
-
     try {
-      await api.post('/orders', { productId: id });
-      alert("Order placed successfully!");
+      await api.post('/cart', { product_id: id });
+      navigate('/cart');
     } catch (err) {
-      console.error('Error placing order:', err);
-      alert("Failed to place order. Please try again.");
+      alert('Failed to add to cart. Please try again.');
     }
   };
 
