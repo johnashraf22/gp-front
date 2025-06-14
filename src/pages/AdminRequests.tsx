@@ -1,48 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Check, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { productApi, Product } from '@/lib/api';
 
+// Define a type for payment requests
+interface PaymentRequest {
+  id: number;
+  seller: string;
+  product: string;
+  amount: string;
+  date: string;
+  proof: string;
+  category: string;
+  description: string;
+  price: string;
+  images: string[];
+}
+
+// Discriminated union for selectedRequest
+type SelectedRequest = { type: 'product', data: Product } | { type: 'payment', data: PaymentRequest };
 
 const AdminRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showReasonInput, setShowReasonInput] = useState<number | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<SelectedRequest | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentRejectId, setCurrentRejectId] = useState<number | null>(null);
   const [currentRejectType, setCurrentRejectType] = useState<string>('');
+  const [sellerRequests, setSellerRequests] = useState<Product[]>([]);
 
-  const [sellerRequests, setSellerRequests] = useState([
-    {
-      id: 1,
-      name: 'Ahmed Mohamed',
-      email: 'ahmed@example.com',
-      date: '2024-01-15',
-      status: 'pending',
-      productName: 'The Great Gatsby',
-      description: 'A timeless classic book',
-      price: '45 EGP',
-      rating: 4,
-      images: ['gatsby1.jpg', 'gatsby2.jpg']
-    },
-    {
-      id: 2,
-      name: 'Sara Ali',
-      email: 'sara@example.com',
-      date: '2024-01-14',
-      status: 'pending',
-      productName: 'Summer Dress',
-      description: 'Beautiful summer dress, size M',
-      price: '95 EGP',
-      rating: 5,
-      images: ['dress1.jpg', 'dress2.jpg']
-    },
-  ]);
-
-  const [paymentRequests, setPaymentRequests] = useState([
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([
     {
       id: 1,
       seller: 'Ahmed Mohamed',
@@ -69,6 +60,19 @@ const AdminRequests = () => {
     },
   ]);
 
+  // Fetch not approved products on mount
+  useEffect(() => {
+    const fetchNotApproved = async () => {
+      try {
+        const products = await productApi.getNotApprovedProducts();
+        setSellerRequests(products);
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchNotApproved();
+  }, []);
+
   const sendApprovalEmail = (email: string, type: string) => {
     const message =
       type === 'seller'
@@ -86,7 +90,7 @@ const AdminRequests = () => {
     if (type === 'Seller') {
       const request = sellerRequests.find((r) => r.id === id);
       if (request) {
-        sendApprovalEmail(request.email, 'seller');
+        sendApprovalEmail('seller@example.com', 'seller');
         setSellerRequests((prev) => prev.filter((r) => r.id !== id));
       }
     } else if (type === 'Payment') {
@@ -109,7 +113,7 @@ const AdminRequests = () => {
       if (currentRejectType === 'Seller') {
         const request = sellerRequests.find((r) => r.id === currentRejectId);
         if (request) {
-          sendRejectionEmail(request.email, rejectionReason);
+          sendRejectionEmail('seller@example.com', rejectionReason);
           setSellerRequests((prev) => prev.filter((r) => r.id !== currentRejectId));
         }
       } else if (currentRejectType === 'Payment') {
@@ -126,8 +130,12 @@ const AdminRequests = () => {
     }
   };
 
-  const handleViewDetails = (request: any, type: string) => {
-    setSelectedRequest({ ...request, requestType: type });
+  const handleViewDetails = (request: Product | PaymentRequest, type: string) => {
+    if (type === 'Seller') {
+      setSelectedRequest({ type: 'product', data: request as Product });
+    } else {
+      setSelectedRequest({ type: 'payment', data: request as PaymentRequest });
+    }
     setShowDetailsModal(true);
   };
 
@@ -154,7 +162,9 @@ const AdminRequests = () => {
               <div key={request.id} className="flex justify-between items-center border p-4 rounded-lg">
                 <div>
                   <p className="font-semibold">{request.name}</p>
-                  <p>{request.email}</p>
+                  <p>Type: {request.type}</p>
+                  <p>Price: {request.price} EGP</p>
+                  {/* Add more product details as needed */}
                 </div>
                 <div className="flex space-x-2">
                   <Button onClick={() => handleViewDetails(request, 'Seller')} variant="outline">
@@ -217,30 +227,23 @@ const AdminRequests = () => {
               <CardTitle>Request Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {selectedRequest.requestType === 'Seller' ? (
+              {selectedRequest.type === 'product' ? (
                 <>
-                  <div><strong>Name:</strong> {selectedRequest.name}</div>
-                  <div><strong>Email:</strong> {selectedRequest.email}</div>
-                  <div><strong>Product:</strong> {selectedRequest.productName}</div>
-                  <div><strong>Description:</strong> {selectedRequest.description}</div>
-                  <div><strong>Price:</strong> {selectedRequest.price}</div>
-                  <div><strong>Rating:</strong> {'★'.repeat(selectedRequest.rating)}</div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {selectedRequest.images.map((img: string, index: number) => (
-                      <img src={img} alt="product" key={index} className="w-full rounded shadow" />
-                    ))}
-                  </div>
+                  <div><strong>Name:</strong> {selectedRequest.data.name}</div>
+                  <div><strong>Type:</strong> {selectedRequest.data.type}</div>
+                  <div><strong>Price:</strong> {selectedRequest.data.price} EGP</div>
+                  {/* Add more fields as needed */}
                 </>
               ) : (
                 <>
-                  <div><strong>Seller:</strong> {selectedRequest.seller}</div>
-                  <div><strong>Product:</strong> {selectedRequest.product}</div>
-                  <div><strong>Category:</strong> {selectedRequest.category}</div>
-                  <div><strong>Description:</strong> {selectedRequest.description}</div>
-                  <div><strong>Price:</strong> {selectedRequest.price}</div>
-                  <div><strong>Amount:</strong> {selectedRequest.amount}</div>
+                  <div><strong>Seller:</strong> {selectedRequest.data.seller}</div>
+                  <div><strong>Product:</strong> {selectedRequest.data.product}</div>
+                  <div><strong>Category:</strong> {selectedRequest.data.category}</div>
+                  <div><strong>Description:</strong> {selectedRequest.data.description}</div>
+                  <div><strong>Price:</strong> {selectedRequest.data.price}</div>
+                  <div><strong>Amount:</strong> {selectedRequest.data.amount}</div>
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    {selectedRequest.images.map((img: string, index: number) => (
+                    {selectedRequest.data.images.map((img: string, index: number) => (
                       <img src={img} alt="proof" key={index} className="w-full rounded shadow" />
                     ))}
                   </div>

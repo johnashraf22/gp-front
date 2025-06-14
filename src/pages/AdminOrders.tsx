@@ -75,7 +75,7 @@ const AdminOrders = () => {
                     <span className="font-semibold">User:</span> {order.user.name} ({order.user.email})
                   </div>
                   <div className="mb-2">
-                    <span className="font-semibold">Total:</span> {order.total} EGP
+                    <span className="font-semibold">Total:</span> {order.total_price} EGP
                   </div>
                   <div className="mb-2">
                     <span className="font-semibold">Status:</span> <span className="capitalize">{order.status}</span>
@@ -84,8 +84,8 @@ const AdminOrders = () => {
                     <span className="font-semibold">Items:</span>
                     <ul className="list-disc list-inside ml-4 mt-1">
                       {order.items.map(item => (
-                        <li key={item.id}>
-                          {item.name} (x{item.quantity}) - {item.price} EGP
+                        <li key={item.product.id}>
+                          {item.product.name} (x{item.product.quantity}) - {item.product.price} EGP
                         </li>
                       ))}
                     </ul>

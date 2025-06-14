@@ -75,14 +75,17 @@ export interface Order {
   id: number;
   user: { id: number; name: string; email: string };
   items: Array<{
-    id: number;
-    name: string;
-    image: string;
+    product:{
+      id: number;
+      name: string;
+      image: string;
+      price: number;
+      quantity: number;
+      type: string;
+    }
     price: number;
-    quantity: number;
-    type: string;
   }>;
-  total: number;
+  total_price: number;
   status: string;
   createdAt: string;
 }
