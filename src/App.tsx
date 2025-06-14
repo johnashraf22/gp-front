@@ -27,6 +27,7 @@ import SellerEditProduct from "./pages/SellerEditProduct";
 import SellerPayment from "./pages/SellerPayment";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
+import AdminOrders from "./pages/AdminOrders";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/admin/manage-items" element={<AdminManageItems />} />
             <Route path="/admin/rates" element={<AdminRates />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
             
             {/* Seller Routes */}
             <Route path="/seller" element={<SellerDashboard />} />

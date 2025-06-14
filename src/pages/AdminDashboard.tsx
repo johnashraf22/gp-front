@@ -77,6 +77,12 @@ const AdminDashboard = () => {
                     <p className="text-sm text-blue-600">12 reviews to approve</p>
                   </div>
                 </Link>
+                <Link to="/admin/orders" className="block">
+                  <div className="p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors cursor-pointer">
+                    <h3 className="font-semibold text-yellow-700">View All Orders</h3>
+                    <p className="text-sm text-yellow-600">See all orders</p>
+                  </div>
+                </Link>
               </CardContent>
             </Card>
           </div>

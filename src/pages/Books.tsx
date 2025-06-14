@@ -1,108 +1,63 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Star, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useSoldOut } from '@/contexts/SoldOutContext';
 import SoldOutStripe from '@/components/SoldOutStripe';
+import { productApi, Product } from '@/lib/api';
+
+// Add a type for books with optional reviews
+interface BookWithReviews extends Product {
+  reviews?: number;
+}
 
 const Books = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { isProductSoldOut, markProductAsSoldOut } = useSoldOut();
+  const [books, setBooks] = useState<BookWithReviews[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mark "The Great Gatsby" as sold out when component mounts
+  // Fetch books from API
   useEffect(() => {
-    markProductAsSoldOut(1); // ID 1 is "The Great Gatsby"
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const products = await productApi.getProducts('book');
+        setBooks(products);
+      } catch (err) {
+        setError('Failed to fetch books. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+    markProductAsSoldOut(0); // ID 1 is "The Great Gatsby"
   }, [markProductAsSoldOut]);
-
-  // Sample books data
-  const books = [
-    {
-      id: 1,
-      name: "The Great Gatsby",
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80",
-      price: 45,
-      rating: 4.5,
-      reviews: 124
-    },
-    {
-      id: 2,
-      name: "To Kill a Mockingbird",
-      image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80",
-      price: 35,
-      rating: 4.9,
-      reviews: 89
-    },
-    {
-      id: 3,
-      name: "Pride and Prejudice",
-      image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=400&q=80",
-      price: 40,
-      rating: 4.7,
-      reviews: 156
-    },
-    {
-      id: 4,
-      name: "1984 by George Orwell",
-      image: "https://images.unsplash.com/photo-1592496431122-2349e0fbc666?auto=format&fit=crop&w=400&q=80",
-      price: 30,
-      rating: 4.8,
-      reviews: 203
-    },
-    {
-      id: 5,
-      name: "The Catcher in the Rye",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-      price: 38,
-      rating: 4.3,
-      reviews: 98
-    },
-    {
-      id: 6,
-      name: "Harry Potter and the Philosopher's Stone",
-      image: "https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?auto=format&fit=crop&w=400&q=80",
-      price: 55,
-      rating: 4.9,
-      reviews: 312
-    },
-    {
-      id: 7,
-      name: "The Lord of the Rings",
-      image: "https://images.unsplash.com/photo-1518373714866-3f1478910cc0?auto=format&fit=crop&w=400&q=80",
-      price: 65,
-      rating: 4.8,
-      reviews: 178
-    },
-    {
-      id: 8,
-      name: "Jane Eyre",
-      image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80",
-      price: 42,
-      rating: 4.6,
-      reviews: 134
-    }
-  ];
 
   const filteredBooks = books.filter(book =>
     book.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleProductClick = (book: any) => {
-    alert("Please log in to view product details");
+  const handleProductClick = (product: Product) => {
+    navigate(`/product/${product.id}`);
   };
 
-  const handleAddToCart = (e: React.MouseEvent, book: any) => {
+  const handleAddToCart = (e: React.MouseEvent, book: BookWithReviews) => {
     e.stopPropagation();
     alert("Please log in to add items to cart");
   };
 
-  const handleAddToFavorites = (e: React.MouseEvent, book: any) => {
+  const handleAddToFavorites = (e: React.MouseEvent, book: BookWithReviews) => {
     e.stopPropagation();
     alert("Please log in to add items to favorites");
   };
 
-  const handleBuyNow = (e: React.MouseEvent, book: any) => {
+  const handleBuyNow = (e: React.MouseEvent, book: BookWithReviews) => {
     e.stopPropagation();
     alert("Please log in to purchase items");
   };
@@ -136,7 +91,15 @@ const Books = () => {
       {/* Books Grid */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {filteredBooks.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-gray-600">Loading books...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-red-600">{error}</p>
+            </div>
+          ) : filteredBooks.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-gray-600">No books found matching your search.</p>
             </div>
@@ -190,7 +153,7 @@ const Books = () => {
                             />
                           ))}
                         </div>
-                        <span className="text-sm text-gray-600">({book.reviews})</span>
+                        <span className="text-sm text-gray-600">({book.reviews ?? 0})</span>
                       </div>
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-2xl font-bold text-emerald-600">{book.price} EGP</span>

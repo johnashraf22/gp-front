@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Star, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useSoldOut } from '@/contexts/SoldOutContext';
 import SoldOutStripe from '@/components/SoldOutStripe';
+import { productApi, Product } from '@/lib/api';
+
+// Extend Product for clothes-specific fields
+interface ClothesProduct extends Product {
+  reviews?: number;
+  category?: string;
+  size?: string;
+}
 
 const Clothes = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,88 +22,25 @@ const Clothes = () => {
 
   const categories = ['All', 'T-Shirts', 'Tops', 'Pants', 'Jackets', 'Dresses'];
 
-  const clothes = [
-    {
-      id: 1,
-      name: "Vintage Denim Jacket",
-      image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5e?auto=format&fit=crop&w=400&q=80",
-      price: 120,
-      rating: 4.8,
-      reviews: 76,
-      category: "Jackets",
-      size: "M"
-    },
-    {
-      id: 2,
-      name: "Floral Summer Top",
-      image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=400&q=80",
-      price: 85,
-      rating: 4.6,
-      reviews: 54,
-      category: "Tops",
-      size: "S"
-    },
-    {
-      id: 3,
-      name: "Cozy Knit Sweater",
-      image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=400&q=80",
-      price: 95,
-      rating: 4.4,
-      reviews: 32,
-      category: "Tops",
-      size: "L"
-    },
-    {
-      id: 4,
-      name: "High Waist Jeans",
-      image: "https://images.unsplash.com/photo-1582418702059-97ebafb35d09?auto=format&fit=crop&w=400&q=80",
-      price: 110,
-      rating: 4.7,
-      reviews: 89,
-      category: "Pants",
-      size: "M"
-    },
-    {
-      id: 5,
-      name: "Graphic T-Shirt",
-      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80",
-      price: 45,
-      rating: 4.3,
-      reviews: 67,
-      category: "T-Shirts",
-      size: "S"
-    },
-    {
-      id: 6,
-      name: "Elegant Evening Dress",
-      image: "https://images.unsplash.com/photo-1566479179817-06e1c5d71a9a?auto=format&fit=crop&w=400&q=80",
-      price: 180,
-      rating: 4.9,
-      reviews: 123,
-      category: "Dresses",
-      size: "M"
-    },
-    {
-      id: 7,
-      name: "Leather Boots",
-      image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5e?auto=format&fit=crop&w=400&q=80",
-      price: 150,
-      rating: 4.5,
-      reviews: 45,
-      category: "Accessories",
-      size: "38"
-    },
-    {
-      id: 8,
-      name: "Casual Blazer",
-      image: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=400&q=80",
-      price: 135,
-      rating: 4.6,
-      reviews: 78,
-      category: "Jackets",
-      size: "L"
-    }
-  ];
+  const [clothes, setClothes] = useState<ClothesProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchClothes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const products = await productApi.getProducts('clothes');
+        setClothes(products);
+      } catch (err) {
+        setError('Failed to fetch clothes. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClothes();
+  }, []);
 
   const filteredClothes = clothes.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -103,21 +48,21 @@ const Clothes = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleProductClick = (item: any) => {
+  const handleProductClick = (item: ClothesProduct) => {
     alert("Please log in to view product details");
   };
 
-  const handleAddToCart = (e: React.MouseEvent, item: any) => {
+  const handleAddToCart = (e: React.MouseEvent, item: ClothesProduct) => {
     e.stopPropagation();
     alert("Please log in to add items to cart");
   };
 
-  const handleAddToFavorites = (e: React.MouseEvent, item: any) => {
+  const handleAddToFavorites = (e: React.MouseEvent, item: ClothesProduct) => {
     e.stopPropagation();
     alert("Please log in to add items to favorites");
   };
 
-  const handleBuyNow = (e: React.MouseEvent, item: any) => {
+  const handleBuyNow = (e: React.MouseEvent, item: ClothesProduct) => {
     e.stopPropagation();
     alert("Please log in to purchase items");
   };
@@ -169,7 +114,15 @@ const Clothes = () => {
       {/* Clothes Grid */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {filteredClothes.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-gray-600">Loading clothes...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-red-600">{error}</p>
+            </div>
+          ) : filteredClothes.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-gray-600">No clothes found matching your search and filters.</p>
             </div>
@@ -225,7 +178,7 @@ const Clothes = () => {
                             />
                           ))}
                         </div>
-                        <span className="text-sm text-gray-600 ml-2">({item.reviews})</span>
+                        <span className="text-sm text-gray-600 ml-2">({item.reviews ?? 0})</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-emerald-600">{item.price} EGP</span>

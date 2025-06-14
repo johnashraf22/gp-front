@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
 
 type UserType = 'user' | 'seller' | 'admin';
 
@@ -14,10 +15,10 @@ interface UserSidebarProps {
 
 const UserSidebar = ({ isOpen, onClose, username, userType }: UserSidebarProps) => {
   const navigate = useNavigate();
+  const { logout } = useUser();
 
   const handleLogout = () => {
-    // هنا ممكن تضيف لوجيك تسجيل الخروج
-    console.log('Logged out');
+    logout();
     onClose();
     navigate('/login');
   };

@@ -62,10 +62,35 @@ export interface Product {
   rating: number;
 }
 
+// Payload for updating a product
+export interface UpdateProductPayload {
+  name: string;
+  description: string;
+  category: string;
+  condition: string;
+}
+
+// Order types
+export interface Order {
+  id: number;
+  user: { id: number; name: string; email: string };
+  items: Array<{
+    id: number;
+    name: string;
+    image: string;
+    price: number;
+    quantity: number;
+    type: string;
+  }>;
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
 // Product API functions
 export const productApi = {
-  getProducts: async (): Promise<Product[]> => {
-    const response = await api.get('/products');
+  getProducts: async (type: 'book' | 'clothes' | 'all' = 'all'): Promise<Product[]> => {
+    const response = await api.get(`/products?type=${type}`);
     return response.data.data || [];
   },
       
@@ -73,6 +98,22 @@ export const productApi = {
     const response = await api.get(`/products/${id}`);
     console.log( "response.data.data", response.data.data);
     return response.data.data;
+  },
+  updateProduct: async (id: number, data: UpdateProductPayload): Promise<Product> => {
+    const response = await api.put(`/products/${id}`, data);
+    return response.data.data;
+  },
+};
+
+// Order API functions
+export const orderApi = {
+  getAllOrders: async (): Promise<Order[]> => {
+    const response = await api.get('/orders');
+    return response.data.data || [];
+  },
+  getAdminOrders: async (): Promise<Order[]> => {
+    const response = await api.get('/admin-orders');
+    return response.data.data || [];
   },
 };
 
