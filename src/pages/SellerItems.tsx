@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Star } from 'lucide-react';
-import { productApi, Product } from '@/lib/api';
+import api, { productApi, Product } from '@/lib/api';
 
 // Extend Product with seller-specific fields
 interface SellerProduct extends Product {
@@ -41,9 +41,14 @@ const SellerItems = () => {
     (product.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id: number, name: string) => {
-    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    try {
+      await api.delete(`/products/${id}`);
+      setProducts(prev => prev.filter(product => product.id !== id));
       alert(`Product "${name}" deleted successfully!`);
+    } catch (err) {
+      alert('Failed to delete product. Product is in an order.');
     }
   };
 

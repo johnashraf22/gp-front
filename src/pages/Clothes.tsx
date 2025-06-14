@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Star, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { useSoldOut } from '@/contexts/SoldOutContext';
 import SoldOutStripe from '@/components/SoldOutStripe';
 import { productApi, Product } from '@/lib/api';
+import { useUser } from '@/contexts/UserContext';
+import api from '@/lib/api';
 
 // Extend Product for clothes-specific fields
 interface ClothesProduct extends Product {
@@ -19,6 +21,8 @@ const Clothes = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { isProductSoldOut } = useSoldOut();
+  const { isLoggedIn } = useUser();
+  const navigate = useNavigate();
 
   const categories = ['All', 'T-Shirts', 'Tops', 'Pants', 'Jackets', 'Dresses'];
 
@@ -62,9 +66,19 @@ const Clothes = () => {
     alert("Please log in to add items to favorites");
   };
 
-  const handleBuyNow = (e: React.MouseEvent, item: ClothesProduct) => {
+  const handleBuyNow = async (e: React.MouseEvent, item: ClothesProduct) => {
     e.stopPropagation();
-    alert("Please log in to purchase items");
+    if (!isLoggedIn) {
+      alert('Please log in to purchase items');
+      navigate('/login');
+      return;
+    }
+    try {
+      await api.post('/cart', { product_id: item.id });
+      navigate('/cart');
+    } catch (err) {
+      alert('Failed to add to cart. Please try again.');
+    }
   };
 
   return (

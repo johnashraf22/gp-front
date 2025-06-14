@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { useSoldOut } from '@/contexts/SoldOutContext';
 import SoldOutStripe from '@/components/SoldOutStripe';
 import { productApi, Product } from '@/lib/api';
+import { useUser } from '@/contexts/UserContext';
+import api from '@/lib/api';
 
 // Add a type for books with optional reviews
 interface BookWithReviews extends Product {
@@ -20,6 +22,7 @@ const Books = () => {
   const [books, setBooks] = useState<BookWithReviews[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isLoggedIn } = useUser();
 
   // Fetch books from API
   useEffect(() => {
@@ -57,9 +60,19 @@ const Books = () => {
     alert("Please log in to add items to favorites");
   };
 
-  const handleBuyNow = (e: React.MouseEvent, book: BookWithReviews) => {
+  const handleBuyNow = async (e: React.MouseEvent, book: BookWithReviews) => {
     e.stopPropagation();
-    alert("Please log in to purchase items");
+    if (!isLoggedIn) {
+      alert('Please log in to purchase items');
+      navigate('/login');
+      return;
+    }
+    try {
+      await api.post('/cart', { product_id: book.id });
+      navigate('/cart');
+    } catch (err) {
+      alert('Failed to add to cart. Please try again.');
+    }
   };
 
   return (

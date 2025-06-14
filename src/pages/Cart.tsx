@@ -90,9 +90,6 @@ const Cart = () => {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price), 0);
   const totalPrice = subtotal + deliveryCharge;
 
-  const handleBuyAll = () => {
-    alert("Please log in to proceed to payment");
-  };
 
   if (loading) {
     return (

@@ -115,6 +115,9 @@ export const orderApi = {
     const response = await api.get('/admin-orders');
     return response.data.data || [];
   },
+  deleteOrder: async (id: number): Promise<void> => {
+    await api.delete(`/admin-orders/${id}`);
+  },
 };
 
 export default api; 

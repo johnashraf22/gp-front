@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { orderApi, Order } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -22,6 +24,17 @@ const AdminOrders = () => {
     };
     fetchOrders();
   }, []);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this order?')) return;
+    try {
+      await orderApi.deleteOrder(id);
+      setOrders(prev => prev.filter(order => order.id !== id));
+      alert('Order deleted successfully!');
+    } catch (err) {
+      alert('Failed to delete order.');
+    }
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading orders...</div>;
@@ -48,6 +61,14 @@ const AdminOrders = () => {
                     <span>Order #{order.id}</span>
                     <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleString()}</span>
                   </CardTitle>
+                  <Button
+                    onClick={() => handleDelete(order.id)}
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50 mt-2 md:mt-0 md:ml-4"
+                    size="sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-2">
