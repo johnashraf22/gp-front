@@ -79,7 +79,12 @@ const Payment = () => {
         payment_method: paymentMethod,
         contact: formData.email || formData.phone,
         delivery_charge: deliveryCharge,
-        total_amount: orderTotal
+        total_amount: orderTotal,
+        products: cartItems.map(item => ({
+          id: item.id,
+          price: item.price,
+          
+        }))
       };
 
       if (paymentMethod === 'instapay') {
